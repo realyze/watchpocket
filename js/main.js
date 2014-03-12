@@ -1,10 +1,10 @@
 watchpocket = {};
 
 watchpocket.post = function (url, data, successHandler, errorHandler) {
-  console.log('posting...', arguments);
+  console.log('posting...' + JSON.stringify(arguments));
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
-    console.log('ready state change, state:', this.readyState);
+    console.log('ready state change, state:' + this.readyState + ' ' + xhr.status);
 		if (xhr.readyState === 4 && xhr.status === 200) {
 			if (successHandler) {
 				successHandler(this);
@@ -17,10 +17,10 @@ watchpocket.post = function (url, data, successHandler, errorHandler) {
 	};
   //console.log('POST', url);
 	xhr.open('POST', url, true);
-	xhr.setRequestHeader("Content-type", "application/json; charset=UTF8");
+	xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
 	xhr.setRequestHeader("X-Accept", "application/json");
-  //console.log('send');
-	xhr.send(data || null);
+  console.log('send ' + data);
+	xhr.send(JSON.stringify(data) || null);
 };
 
 watchpocket.getRequestToken = function() {
@@ -96,6 +96,7 @@ watchpocket.loadBookmarks = function(el, query, sort, state, callback) {
 	watchpocket.post('https://getpocket.com/v3/get',
 		JSON.stringify(params),
 		function (xhr) {
+      console.log('calling success handler');
 			$('h3.bookmarksTitle', el).show();
             $('.bookmarksSort', el).show();
             $('.bookmarksState', el).show();

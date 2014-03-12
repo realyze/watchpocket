@@ -1,4 +1,6 @@
 $(function() {
+  console.log('content script loaded');
+
 	var imgURL = chrome.extension.getURL('img/appIcon.png');
 	var el = $('<div />').css({
 		position: 'fixed',
@@ -24,6 +26,8 @@ $(function() {
 		$(this).css('opacity', '0.3');
 	});
 	$('body').append(el);
+
+  console.log('content scrip done');
 });
 
 var showBookmarkMessage = function() {

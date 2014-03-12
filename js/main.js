@@ -1,20 +1,25 @@
 watchpocket = {};
 
 watchpocket.post = function (url, data, successHandler, errorHandler) {
+  console.log('posting...', arguments);
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
-		if (this.readyState === 4 && this.status === 200) {
+    console.log('ready state change, state:', this.readyState);
+		if (xhr.readyState === 4 && xhr.status === 200) {
 			if (successHandler) {
 				successHandler(this);
 			}
 		}
 		else if (this.readyState === 4 && this.status === 401) {
+      console.log('HTTP 401 returned');
 			watchpocket.getRequestToken();
 		}
 	};
+  //console.log('POST', url);
 	xhr.open('POST', url, true);
 	xhr.setRequestHeader("Content-type", "application/json; charset=UTF8");
 	xhr.setRequestHeader("X-Accept", "application/json");
+  //console.log('send');
 	xhr.send(data || null);
 };
 
@@ -40,6 +45,10 @@ watchpocket.getAuthorization = function(requestToken) {
 		'&redirect_uri=',
 		chrome.extension.getURL('auth.html') + '?status=done'
 	].join('');
+  // TODO: Not implemented in KITT!
+  // use `chrome.tabs.update(tab.id, {url: result.Name}, function(){...});`
+  // see GestureToLocation popup.js getActiveTab
+  // chrome.tabs.query({active: true}, ...) to get tab.id
 	chrome.tabs.create({url: url});
 };
 
@@ -65,23 +74,26 @@ watchpocket.isLoggedIn = function() {
 	return (localStorage.oAuthAccessToken) ? true : false;
 };
 
-watchpocket.loadBookmarks = function(el, query, sort, state) {
+watchpocket.loadBookmarks = function(el, query, sort, state, callback) {
+  console.log('main: loading bookmarks');
 	var params = {
-		consumer_key: watchpocket.consumerKey,
-		access_token: localStorage.oAuthAccessToken
+		//consumer_key: watchpocket.consumerKey,
+		//access_token: null//localStorage.oAuthAccessToken
 	}
-	el.css('opacity', '0.3');
+  console.log('1');
+	//el.css('opacity', '0.3');
 	if (query) {
 		params['search'] = query;
 	}
-    if (sort) {
-        params['sort'] = sort;
-    }
-    if (state) {
-        params['state'] = state;
-    }
-	watchpocket.post(
-		'https://getpocket.com/v3/get',
+  console.log('2');
+  if (sort) {
+      params['sort'] = sort;
+  }
+  if (state) {
+      params['state'] = state;
+  }
+  console.log('calling post', params);
+	watchpocket.post('https://getpocket.com/v3/get',
 		JSON.stringify(params),
 		function (xhr) {
 			$('h3.bookmarksTitle', el).show();
@@ -96,7 +108,7 @@ watchpocket.loadBookmarks = function(el, query, sort, state) {
 				var realURL = d.resolved_url || d.given_url;
 				// If neither resolved or given URL the item isn't worthwhile showing
 				if (realURL) {
-                    var id = d.item_id;
+          var id = d.item_id;
 					// Regular expression to parse out the domain name of the URL, or an empty string if something fails
 					var domain = realURL.match(/^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?/i)[3] || '';
 					// Fetches a icon from a great webservice which provides a default fallback icon
@@ -171,6 +183,10 @@ watchpocket.loadBookmarks = function(el, query, sort, state) {
 				items = items.sort(newestSort);
 			}
 
+      return callback(null, items);
+
+      //TODO!
+
 			var html = '';
 			// Iterate through the reversed items array to get newest items at the top
 			$.each(items, function(i, d) {
@@ -198,8 +214,9 @@ watchpocket.add = function(url) {
 		access_token: localStorage.oAuthAccessToken,
 		url: url
 	};
-	watchpocket.post('https://getpocket.com/v3/add', JSON.stringify(params), function() {
-		 chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
+	watchpocket.post('https://ge-tpocket.com/v3/add', JSON.stringify(params), function() {
+    //TODO: THIS IS NOT SUPPORTED IN KITT!
+		chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
 	});
 };
 
@@ -213,17 +230,28 @@ watchpocket.send = function(method, id) {
 };
 
 $(function() {
+ console.log('main script, creating context menu item');
 	chrome.contextMenus.create({
+    id: "pocketContextMenu",
 		title: 'Add to Pocket',
-		contexts : ['page'],
+		contexts : ['all'],
 		onclick: function(info, tab) {
 			watchpocket.add(tab.url);
-		}
+		},
+    enabled: true
 	});
 
+  console.log('main: adding command listener');
+
 	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log('main: command received', request);
 		if (request.command === 'addBookmark' && request.url) {
 			watchpocket.add(request.url);
-		}
+		} else if (request.command === 'loadBookmarks') {
+      console.log('main: loading bookmarks...')
+      watchpocket.loadBookmarks(request.query, request.sort, request.state, function(err, items) {
+        sendResponse({items: items});
+      });
+    }
 	});
 });

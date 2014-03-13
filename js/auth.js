@@ -1,6 +1,7 @@
 watchpocket = window.watchpocket || chrome.extension.getBackgroundPage().watchpocket;
 
 $(function() {
+  console.log('auth.js');
 	if (location.search == '?status=done' && localStorage.oAuthRequestToken) {
 		watchpocket.getAccessToken();
 	}

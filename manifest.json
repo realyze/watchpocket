@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
 
-  "name": "Watchpocket",
+  "name": "watchpocket",
   "description": "This extension allows you to connect to your Pocket account, bookmark and view a list of all your bookmarks.",
-  "version": "1.6",
+  "version": "1.8",
   "icons": { "128": "img/appIcon.png" },
   "background": { "scripts": ["js/vendor/jquery.min.js", "js/main.js"] },
   "permissions": [ "tabs", "contextMenus", "https://getpocket.com/*", "http://*/*", "https://*/*" ],

@@ -1,8 +1,16 @@
-watchpocket = {};
+var watchpocket = {};
+var oauthToken = null;
 
 watchpocket.post = function (url, data, successHandler, errorHandler) {
   console.log('posting...' + JSON.stringify(arguments));
 	var xhr = new XMLHttpRequest();
+  xhr.onerror = function() {
+ 	  if (this.status === 401) {
+      console.log('HTTP 401 returned');
+ 		  watchpocket.getRequestToken();
+    }
+  };
+
 	xhr.onreadystatechange = function () {
     console.log('ready state change, state:' + this.readyState + ' ' + xhr.status);
 		if (xhr.readyState === 4 && xhr.status === 200) {
@@ -20,7 +28,7 @@ watchpocket.post = function (url, data, successHandler, errorHandler) {
 	xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
 	xhr.setRequestHeader("X-Accept", "application/json");
   console.log('send ' + data);
-	xhr.send(JSON.stringify(data) || null);
+	xhr.send(data || null);
 };
 
 watchpocket.getRequestToken = function() {
@@ -31,8 +39,9 @@ watchpocket.getRequestToken = function() {
 			'redirect_uri' : chrome.extension.getURL('auth.html') + '?status=done'
 		}),
 		function (xhr) {
+      console.log('getRequestToken callback');
 			var response = JSON.parse(xhr.responseText);
-			localStorage.oAuthRequestToken = response.code;
+			oauthToken = response.code;
 			watchpocket.getAuthorization(response.code);
 		}
 	);
@@ -45,11 +54,22 @@ watchpocket.getAuthorization = function(requestToken) {
 		'&redirect_uri=',
 		chrome.extension.getURL('auth.html') + '?status=done'
 	].join('');
+
+  chrome.tabs.query({active: true}, function(tabs) {
+    if (tabs.length === 0) {
+      console.error('no active tab found');
+      return
+    }
+    chrome.tabs.update(tabs[0].id, {url:url}, function(){
+      console.log('updated tab');
+    });
+  });
+  console.log('creating tab: ' + url);
   // TODO: Not implemented in KITT!
   // use `chrome.tabs.update(tab.id, {url: result.Name}, function(){...});`
   // see GestureToLocation popup.js getActiveTab
   // chrome.tabs.query({active: true}, ...) to get tab.id
-	chrome.tabs.create({url: url});
+	//chrome.tabs.create({url: url});
 };
 
 watchpocket.getAccessToken = function(callback) {
@@ -61,13 +81,13 @@ watchpocket.getAccessToken = function(callback) {
 		}),
 		function (xhr) {
 			var response = JSON.parse(xhr.responseText);
-			localStorage.oAuthAccessToken = response.access_token;
+			oauthToken = response.access_token;
 			if (callback) callback();
 		}
 	);
 };
 
-watchpocket.consumerKey = '15125-5b0f6fea981d25edb7d399cd';
+watchpocket.consumerKey = '24728-3ffcc9d8cd78b7890e28362e';
 
 
 watchpocket.isLoggedIn = function() {
@@ -77,7 +97,7 @@ watchpocket.isLoggedIn = function() {
 watchpocket.loadBookmarks = function(el, query, sort, state, callback) {
   console.log('main: loading bookmarks');
 	var params = {
-		//consumer_key: watchpocket.consumerKey,
+		consumer_key: watchpocket.consumerKey,
 		//access_token: null//localStorage.oAuthAccessToken
 	}
   console.log('1');

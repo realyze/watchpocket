@@ -1,5 +1,6 @@
-var watchpocket = {};
-var oauthToken = null;
+watchpocket = {};
+var oauthRequestToken = null;
+var oauthAccessToken = null;
 
 watchpocket.post = function (url, data, successHandler, errorHandler) {
   console.log('posting...' + JSON.stringify(arguments));
@@ -41,7 +42,7 @@ watchpocket.getRequestToken = function() {
 		function (xhr) {
       console.log('getRequestToken callback');
 			var response = JSON.parse(xhr.responseText);
-			oauthToken = response.code;
+      oauthRequestToken = response.code
 			watchpocket.getAuthorization(response.code);
 		}
 	);
@@ -77,11 +78,11 @@ watchpocket.getAccessToken = function(callback) {
 		'https://getpocket.com/v3/oauth/authorize',
 		JSON.stringify({
 			'consumer_key' : watchpocket.consumerKey,
-			'code'         : localStorage.oAuthRequestToken
+			'code'         : oauthRequestToken
 		}),
 		function (xhr) {
 			var response = JSON.parse(xhr.responseText);
-			oauthToken = response.access_token;
+			oauthAccessToken = response.access_token;
 			if (callback) callback();
 		}
 	);
@@ -98,7 +99,7 @@ watchpocket.loadBookmarks = function(el, query, sort, state, callback) {
   console.log('main: loading bookmarks');
 	var params = {
 		consumer_key: watchpocket.consumerKey,
-		//access_token: null//localStorage.oAuthAccessToken
+		access_token: oauthRequestToken
 	}
   console.log('1');
 	//el.css('opacity', '0.3');
@@ -123,7 +124,7 @@ watchpocket.loadBookmarks = function(el, query, sort, state, callback) {
 			$('.bookmarksSearch', el).show();
 			var list = JSON.parse(xhr.responseText).list;
 			var items = [];
-			console.log(list);
+			console.log('list ' + list);
 			$.each(list, function(i, d) {
 				// Real URL is preferably the resolved URL but could be the given URL
 				var realURL = d.resolved_url || d.given_url;
@@ -204,6 +205,7 @@ watchpocket.loadBookmarks = function(el, query, sort, state, callback) {
 				items = items.sort(newestSort);
 			}
 
+      console.log('bookmarks items ' + JSON.stringify(items));
       return callback(null, items);
 
       //TODO!
@@ -265,7 +267,7 @@ $(function() {
   console.log('main: adding command listener');
 
 	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log('main: command received', request);
+    console.log('main: command received ' + request.command);
 		if (request.command === 'addBookmark' && request.url) {
 			watchpocket.add(request.url);
 		} else if (request.command === 'loadBookmarks') {
@@ -273,6 +275,16 @@ $(function() {
       watchpocket.loadBookmarks(request.query, request.sort, request.state, function(err, items) {
         sendResponse({items: items});
       });
+    } else if (request.command === 'getOauthRequestToken') {
+      console.log('getOauthRequestToken');
+      sendResponse(null, oauthRequestToken);
+      return;
+    } else if (request.command === 'getOauthAccessToken') {
+      console.log('getOauthAccessToken');
+      sendResponse(null, oauthAccessToken);
+      return;
+    } else {
+      console.log('unknown command: ' + JSON.stringify(request));
     }
 	});
 });

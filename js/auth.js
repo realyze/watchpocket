@@ -1,10 +1,18 @@
-watchpocket = window.watchpocket || chrome.extension.getBackgroundPage().watchpocket;
+
+//watchpocket = window.watchpocket || chrome.extension.getBackgroundPage().watchpocket;
 
 $(function() {
-  console.log('auth.js');
-	if (location.search == '?status=done' && localStorage.oAuthRequestToken) {
-		watchpocket.getAccessToken();
-	}
+	if (location.search == '?status=done') {
+    window.alert('1');
+    chrome.runtime.sendMessage({command: 'getOauthRequestToken'}, function(err, reqToken) {
+      window.alert('2');
+      chrome.runtime.sendMessage({command: 'getOauthAccessToken'}, function(err, accessToken) {
+        window.alert('3');
+        window.alert('auth done, yay!');
+      });
+    });
+  }
+
 	$('#closeTab').click(function(e) {
 		e.preventDefault();
 		chrome.tabs.getCurrent(function(tab) {

@@ -1,17 +1,19 @@
-
-(function() {
-console.log("I'm here!");
-})();
-
-//watchpocket = window.watchpocket || chrome.extension.getBackgroundPage().watchpocket;
-
-//console.log('watchpocket', watchpocket);
-
-
 var sort = 'newest';
 var state = 'unread';
 
-var search = function() {
+angular.module('watchpocket', [])
+
+.controller('bookmarksCtrl', function($scope) {
+  $scope.bookmarks = [];
+
+  search(function(err, bookmarks) {
+    console.log('bookmarks loaded');
+    $scope.bookmarks = bookmarks;
+    $scope.$apply();
+  });
+});
+
+var search = function(callback) {
   console.log('calling search...');
   chrome.runtime.sendMessage({
       command: "loadBookmarks",
@@ -19,13 +21,38 @@ var search = function() {
       sort: sort,
       state: state
     }, function(response) {
-      console.log('search response');
+      console.log('search response ' + response);
+      callback(null, response);
   });
   console.log('called search');
 }
-
+/*
 //$(function() {
-	search();
+	//search(function(err, items) {
+   // console.log('items' + items);
+    var html = '';
+
+    var el = $('#bookmarks');
+    console.log('el: ' + el.length);
+
+    $.each(items, function(i, d) {
+      var classes = '';
+				if (d.favorite === true) {
+					classes += 'favorite ';
+				}
+				if (d.status === 1) {
+					classes += 'archived ';
+				}
+      html += '<tr id="' + d.id + '" rel="tooltip" data-url="' + d.url + '" ' + d.excerpt + ' class="'+ classes +'"><td class="favicon"><img src="' + d.icon + '" /></td>' +
+              '<td class="title"><span class="data">' + d.title + '</span><span class="domain">' + d.domain + '</span>' +
+            '<span class="actions"><i class="icon-ok"></i><i class="icon-heart"></i><i class="icon-trash"></i></span></td></tr>';
+    });
+    console.log('html ' + html);
+    $('.bookmarksSearch input', el).focus();
+    $('tbody', el).html(html);
+    el.css('opacity', '1.0');
+  });
+*/
     $('#bookmarks').on('click', 'tr', function(e) {
         var $this = $(this);
         var target = $(e.target);

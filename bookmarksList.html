@@ -1,18 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="watchpocket">
 	<head>
 		<meta charset="utf-8" />
 		<title>Watchpocket bookmarks</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
 		<!--link href="css/main.css" rel="stylesheet"-->
-		<!--script src="js/vendor/jquery.min.js"></script-->
-		<!--script src="js/vendor/bootstrap.min.js"></script-->
+		<script src="js/vendor/jquery.min.js"></script>
+		<script src="js/vendor/bootstrap.min.js"></script>
+		<script src="bower_components/angular/angular.min.js"></script>
 		<script src="js/bookmarkList.js"></script>
 	</head>
 	<body>
-    <div>FOOBAAAAAZ</div>
-		<div id="bookmarks" class="wrapper">
+    <div ng-controller="bookmarksCtrl">
+      <ul>
+        <li ng-repeat="item in bookmarks"><img src="{{item.icon}}"/>{{item.title}}</li>
+      </ul>
+    </div>
+		<!--div id="bookmarks" class="wrapper">
 			<div class="row-fluid">
 				<div class="span12"><h3 class="bookmarksTitle">Bookmarks <span id="time"></span></h3></div>
 			</div>
@@ -48,6 +53,6 @@
 					</table>
 				</div>
 			</div>
-		</div>
+		</div-->
 	</body>
 </html>

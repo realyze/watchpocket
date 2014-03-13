@@ -3,17 +3,35 @@
 
   "name": "watchpocket",
   "description": "This extension allows you to connect to your Pocket account, bookmark and view a list of all your bookmarks.",
-  "version": "1.8",
+  "version": "1.9",
   "icons": { "128": "img/appIcon.png" },
-  "background": { "scripts": ["js/vendor/jquery.min.js", "js/main.js"] },
-  "permissions": [ "tabs", "contextMenus", "https://getpocket.com/*", "http://*/*", "https://*/*" ],
+  "background": {
+    "scripts": [
+      "bower_components/jquery/jquery.min.js",
+      "bower_components/q/q.js",
+      "js/main.js"
+    ]
+  },
+  "permissions": [
+    "tabs",
+    "contextMenus",
+    "storage",
+    "https://getpocket.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
   "browser_action": {
     "default_popup": "bookmarksList.html"
   },
   "content_scripts": [
     {
       "matches": ["/^.*$/"],
-      "js": ["js/vendor/jquery.min.js", "js/content.js"]
+      "js": [
+        "bower_components/jquery/jquery.min.js",
+        "bower_components/q/q.js",
+        "js/content.js",
+        "js/auth.js"
+      ]
     }
   ],
   "web_accessible_resources": [

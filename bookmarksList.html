@@ -5,6 +5,7 @@
 		<title>Watchpocket bookmarks</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="css/pocket.css" rel="stylesheet">
 		<!--link href="css/main.css" rel="stylesheet"-->
 		<script src="js/vendor/jquery.min.js"></script>
 		<script src="js/vendor/bootstrap.min.js"></script>
@@ -12,9 +13,9 @@
 		<script src="js/bookmarkList.js"></script>
 	</head>
 	<body>
-    <div ng-controller="bookmarksCtrl">
+    <div id="bookmarks" ng-controller="bookmarksCtrl">
       <ul>
-        <li ng-repeat="item in bookmarks"><img src="{{item.icon}}"/>{{item.title}}</li>
+        <li ng-click="bookmarkSelected(item)" ng-repeat="item in bookmarks"><img src="{{item.icon}}"/>{{item.title}}</li>
       </ul>
     </div>
 		<!--div id="bookmarks" class="wrapper">

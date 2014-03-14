@@ -27,10 +27,6 @@
     {
       "matches": ["/^.*$/"],
       "js": [
-        "bower_components/jquery/jquery.min.js",
-        "bower_components/q/q.js",
-        "js/content.js",
-        "js/auth.js"
       ]
     }
   ],

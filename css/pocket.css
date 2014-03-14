@@ -1,0 +1,8 @@
+#bookmarks li {
+ height: 20px;
+}
+
+#bookmarks li img {
+  width: 20px;
+  height: 20px;
+}

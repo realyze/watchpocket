@@ -22,7 +22,7 @@ var localJQuery = $.noConflict(true);
 
   var search = function(callback) {
     console.log('calling search...');
-    chrome.runtime.sendMessage({
+    chrome.runtime.sendMessage(null, {
         command: "loadBookmarks",
         query: null, //$('.bookmarksSearch input').val(),
         sort: sort,

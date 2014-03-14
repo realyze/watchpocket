@@ -2,9 +2,10 @@
 //watchpocket = window.watchpocket || chrome.extension.getBackgroundPage().watchpocket;
 
 $(function() {
+setTimeout(function() {
 	if (location.search == '?status=done') {
-    chrome.runtime.sendMessage({command: 'getOauthRequestToken'}, function(err, reqToken) {
-      chrome.runtime.sendMessage({command: 'getOauthAccessToken'}, function(err, accessToken) {
+    chrome.runtime.sendMessage(null, {command: 'getOauthRequestToken'}, function(err, reqToken) {
+      chrome.runtime.sendMessage(null, {command: 'getOauthAccessToken'}, function(err, accessToken) {
         window.alert('auth done, yay!');
       });
     });
@@ -17,4 +18,5 @@ $(function() {
 		});
 		return false;
 	});
+}, 2000);
 });

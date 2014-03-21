@@ -1,169 +1,53 @@
-watchpocket = {};
+var watchpocket = watchpocket || {};
+
 var oauthRequestToken = null;
 var oauthAccessToken = null;
 
 
 watchpocket.consumerKey = '24728-3ffcc9d8cd78b7890e28362e';
 
-var LOG = function() {
-  res = "";
-  for(i=0; i<arguments.length; ++i) {
-    if (typeof(arguments[i]) === 'string' || typeof(arguments[i]) === 'function') {
-      res += arguments[i] + ' ';
-    } else {
-      res += JSON.stringify(arguments[i], null, 2) + ' ';
-    }
-  }
-  console.log(res);
-};
-
 
 watchpocket.post = function (url, data) {
   var defer = Q.defer();
 
-	var xhr = new XMLHttpRequest();
+  var xhr = new XMLHttpRequest();
   xhr.onerror = function(err) {
     console.log('XMLHttpRequest error: ' + err);
- 	  if (this.status === 401) {
+    if (this.status === 401) {
       console.log('HTTP 401 returned');
       watchpocket.getRequestToken();
-      defer.resolve();
+      defer.reject({code: 401});
     }
   };
 
-	xhr.onreadystatechange = function () {
+  xhr.onreadystatechange = function () {
     console.log('ready state change, state:' + this.readyState + ' ' + xhr.status);
-		if (xhr.readyState === 4 && xhr.status === 200) {
+    if (xhr.readyState === 4 && xhr.status === 200) {
       console.log('xhr response ' + xhr.responseText);
       defer.resolve(JSON.parse(xhr.responseText));
-		} else if (this.readyState === 4 && this.status === 401) {
+    } else if (this.readyState === 4 && this.status === 401) {
       console.log('HTTP 401 returned');
       watchpocket.getRequestToken();
-      defer.resolve();
-		}
-	};
+      defer.reject({code: 401});
+    }
+  };
 
-	xhr.open('POST', url, true);
-	xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
-	xhr.setRequestHeader("X-Accept", "application/json");
-	xhr.send(data || null);
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+  xhr.setRequestHeader("X-Accept", "application/json");
+  xhr.send(data || null);
 
   LOG('HTTP req sent to', url, data);
 
   return defer.promise;
 };
 
-watchpocket.getRequestToken = function() {
-	return watchpocket.post(
-		'https://getpocket.com/v3/oauth/request',
-		JSON.stringify({
-			'consumer_key' : watchpocket.consumerKey,
-			'redirect_uri' : chrome.extension.getURL('auth.html') + '?status=done'
-		})
-  ).then(function(response) {
-    oauthRequestToken = response.code;
-		watchpocket.getAuthorization(response.code);
-  });
-};
-
-
-var getOauthAccessToken = function() {
-  var defer = Q.defer();
-  chrome.storage.sync.get('oauthAccessToken', function(items) {
-    console.log('oauth access token: ' + items.oauthAccessToken);
-    defer.resolve(items.oauthAccessToken);
-  });
-  return defer.promise;
-};
-
-watchpocket.getAuthorization = function(requestToken) {
-	var url = [
-		'https://getpocket.com/auth/authorize?request_token=',
-		requestToken,
-		'&redirect_uri=',
-		chrome.extension.getURL('auth.html') + '?status=done'
-	].join('');
-
-  chrome.tabs.query({active: true}, function(tabs) {
-    if (tabs.length === 0) {
-      console.error('no active tab found');
-      return;
-    }
-    chrome.tabs.update(tabs[0].id, {url:url}, function(){
-      console.log('updated tab');
-    });
-  });
-  console.log('creating tab: ' + url);
-  // TODO: Not implemented in KITT!
-  // use `chrome.tabs.update(tab.id, {url: result.Name}, function(){...});`
-  // see GestureToLocation popup.js getActiveTab
-  // chrome.tabs.query({active: true}, ...) to get tab.id
-	//chrome.tabs.create({url: url});
-};
-
-watchpocket.getAccessToken = function() {
-  var defer = Q.defer();
-
-	watchpocket.post(
-		'https://getpocket.com/v3/oauth/authorize',
-		JSON.stringify({
-			'consumer_key' : watchpocket.consumerKey,
-			'code'         : oauthRequestToken
-		})
-  )
-
-  .then(function(response) {
-    oauthAccessToken = response.access_token;
-    chrome.storage.sync.set({oauthAccessToken: oauthAccessToken}, function() {
-      console.log('oauth access token saved');
-      defer.resolve();
-    })
-  });
-
-  return defer.promise;
-};
-
-var newestSort = function(a, b) {
-  var aTime = parseInt(a.added);
-  var bTime = parseInt(b.added);
-  if (aTime < bTime)
-    return 1;
-  if (aTime > bTime)
-    return -1;
-  return 0;
-};
-
-var oldestSort = function(a, b) {
-  var aTime = parseInt(a.added);
-  var bTime = parseInt(b.added);
-  if (aTime < bTime)
-    return -1;
-  if (aTime > bTime)
-    return 1;
-  return 0;
-};
-
-var titleSort = function(a, b) {
-  if (a.title < b.title)
-    return -1;
-  if (a.title > b.title)
-    return 1;
-  return 0;
-};
-
-var siteSort = function(a, b) {
-  if (a.domain < b.domain)
-    return -1;
-  if (a.domain > b.domain)
-    return 1;
-  return 0;
-};
 
 watchpocket.loadBookmarks = function(query, sort, state) {
 
   var params = {};
 
-  return getOauthAccessToken()
+  return watchpocket.getOauthAccessToken()
     .then(function(token) {
       params = {
         consumer_key: watchpocket.consumerKey,
@@ -242,63 +126,49 @@ watchpocket.loadBookmarks = function(query, sort, state) {
 };
 
 
-var getActiveTab = function() {
-  var defer = Q.defer();
-
-  chrome.tabs.query({active: true}, function(tabs) {
-    if (tabs.length === 0) {
-      console.error('no active tab found');
-      return defer.reject();
-    }
-    LOG('active tab', tabs[0]);
-    return defer.resolve(tabs[0]);
-  });
-
-  return defer.promise;
-};
-
 watchpocket.add = function(url) {
   var params = {
     consumer_key: watchpocket.consumerKey
   };
 
-  LOG('adding to pocket...', params);
-
   return getActiveTab().then(function(tab) {
       params.url = tab.url;
     })
     .then(function() {
-      return getOauthAccessToken()
+      LOG('1');
+      return watchpocket.getOauthAccessToken()
     })
     .then(function(oauthAccessToken) {
+      LOG('2');
       params.access_token = oauthAccessToken;
     })
     .then(function() {
+      LOG('adding to pocket...', params);
       return watchpocket.post('https://getpocket.com/v3/add', params)
     })
     .then(function(reponse) {
       console.log('aded to pocket ' + response);
     //TODO: THIS IS NOT SUPPORTED IN KITT!
-		//chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
-	  });
+    //chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
+    });
 };
 
 watchpocket.send = function(method, id) {
-	var params = {
-		consumer_key: watchpocket.consumerKey,
-		access_token: localStorage.oAuthAccessToken,
-		actions: [{'action': method, 'item_id': id}]
-	};
-	return watchpocket.post('https://getpocket.com/v3/send', JSON.stringify(params));
+  var params = {
+    consumer_key: watchpocket.consumerKey,
+    access_token: localStorage.oAuthAccessToken,
+    actions: [{'action': method, 'item_id': id}]
+  };
+  return watchpocket.post('https://getpocket.com/v3/send', JSON.stringify(params));
 };
 
 $(function() {
-	var addToPocketMenuId = chrome.contextMenus.create({
+  var addToPocketMenuId = chrome.contextMenus.create({
     id: "pocketContextMenu",
-		title: 'Add to Pocket',
-		contexts : ['all'],
+    title: 'Add to Pocket',
+    contexts : ['all'],
     enabled: true
-	});
+  });
 
   chrome.contextMenus.onClicked.addListener(function(info, tab) {
     if (info.menuItemId !== addToPocketMenuId) {
@@ -308,16 +178,20 @@ $(function() {
     watchpocket.add(location.toString());
   });
 
-	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log('main: command received ' + request.command);
-		if (request.command === 'addBookmark' && request.url) {
-			watchpocket.add(request.url);
-		} else if (request.command === 'loadBookmarks') {
+    if (request.command === 'addBookmark' && request.url) {
+      watchpocket.add(request.url);
+    } else if (request.command === 'loadBookmarks') {
       console.log('main: loading bookmarks...')
       watchpocket.loadBookmarks(request.query, request.sort, request.state)
         .then(function(items) {
           console.log('returning items ' + items);
           sendResponse(items);
+        }, function(err) {
+          if (err.code === 401) {
+            sendResponse(null);
+          }
         });
       return true;
     } else if (request.command === 'getOauthRequestToken') {
@@ -332,5 +206,5 @@ $(function() {
     } else {
       console.log('unknown command: ' + JSON.stringify(request));
     }
-	});
+  });
 });

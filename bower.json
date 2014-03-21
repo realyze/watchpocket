@@ -20,5 +20,8 @@
   "install": {
     "path": "vendor"
   },
-  "private": true
+  "private": true,
+  "resolutions": {
+    "angular": "~1.2.14"
+  }
 }

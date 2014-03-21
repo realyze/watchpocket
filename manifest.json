@@ -9,6 +9,8 @@
     "scripts": [
       "vendor/jquery/jquery.js",
       "vendor/q/q.js",
+      "js/common.js",
+      "js/oauth.js",
       "js/main.js"
     ]
   },
@@ -25,8 +27,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["/^.*$/"],
+      "matches": ["/^chrome-extension.*$/"],
       "js": [
+        "vendor/jquery/jquery.js",
+        "js/common.js",
+        "js/auth.js"
       ]
     }
   ],

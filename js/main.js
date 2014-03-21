@@ -304,8 +304,8 @@ $(function() {
     if (info.menuItemId !== addToPocketMenuId) {
       return;
     }
-    console.log('tab url to add: ' + JSON.stringify(tab))
-    watchpocket.add(location.toString());
+    console.log('click info to add: ' + JSON.stringify(info))
+    watchpocket.add(info.linkUrl);
   });
 
 	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {

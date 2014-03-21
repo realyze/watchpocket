@@ -5,12 +5,25 @@ var oauthAccessToken = null;
 
 watchpocket.consumerKey = '24728-3ffcc9d8cd78b7890e28362e';
 
+var LOG = function() {
+  res = "";
+  for(i=0; i<arguments.length; ++i) {
+    if (typeof(arguments[i]) === 'string' || typeof(arguments[i]) === 'function') {
+      res += arguments[i] + ' ';
+    } else {
+      res += JSON.stringify(arguments[i], null, 2) + ' ';
+    }
+  }
+  console.log(res);
+};
+
 
 watchpocket.post = function (url, data) {
   var defer = Q.defer();
 
 	var xhr = new XMLHttpRequest();
-  xhr.onerror = function() {
+  xhr.onerror = function(err) {
+    console.log('XMLHttpRequest error: ' + err);
  	  if (this.status === 401) {
       console.log('HTTP 401 returned');
       watchpocket.getRequestToken();
@@ -35,6 +48,8 @@ watchpocket.post = function (url, data) {
 	xhr.setRequestHeader("X-Accept", "application/json");
 	xhr.send(data || null);
 
+  LOG('HTTP req sent to', url, data);
+
   return defer.promise;
 };
 
@@ -55,6 +70,7 @@ watchpocket.getRequestToken = function() {
 var getOauthAccessToken = function() {
   var defer = Q.defer();
   chrome.storage.sync.get('oauthAccessToken', function(items) {
+    console.log('oauth access token: ' + items.oauthAccessToken);
     defer.resolve(items.oauthAccessToken);
   });
   return defer.promise;
@@ -225,17 +241,46 @@ watchpocket.loadBookmarks = function(query, sort, state) {
     });
 };
 
+
+var getActiveTab = function() {
+  var defer = Q.defer();
+
+  chrome.tabs.query({active: true}, function(tabs) {
+    if (tabs.length === 0) {
+      console.error('no active tab found');
+      return defer.reject();
+    }
+    LOG('active tab', tabs[0]);
+    return defer.resolve(tabs[0]);
+  });
+
+  return defer.promise;
+};
+
 watchpocket.add = function(url) {
-	var params = {
-		consumer_key: watchpocket.consumerKey,
-		access_token: localStorage.oAuthAccessToken,
-		url: url
-	};
-	return watchpocket.post('https://ge-tpocket.com/v3/add', JSON.stringify(params))
+  var params = {
+    consumer_key: watchpocket.consumerKey
+  };
+
+  LOG('adding to pocket...', params);
+
+  return getActiveTab().then(function(tab) {
+      params.url = tab.url;
+    })
     .then(function() {
+      return getOauthAccessToken()
+    })
+    .then(function(oauthAccessToken) {
+      params.access_token = oauthAccessToken;
+    })
+    .then(function() {
+      return watchpocket.post('https://getpocket.com/v3/add', params)
+    })
+    .then(function(reponse) {
+      console.log('aded to pocket ' + response);
     //TODO: THIS IS NOT SUPPORTED IN KITT!
-		chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
-	});
+		//chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
+	  });
 };
 
 watchpocket.send = function(method, id) {
@@ -248,15 +293,20 @@ watchpocket.send = function(method, id) {
 };
 
 $(function() {
-	chrome.contextMenus.create({
+	var addToPocketMenuId = chrome.contextMenus.create({
     id: "pocketContextMenu",
 		title: 'Add to Pocket',
 		contexts : ['all'],
-		onclick: function(info, tab) {
-			watchpocket.add(tab.url);
-		},
     enabled: true
 	});
+
+  chrome.contextMenus.onClicked.addListener(function(info, tab) {
+    if (info.menuItemId !== addToPocketMenuId) {
+      return;
+    }
+    console.log('tab url to add: ' + JSON.stringify(tab))
+    watchpocket.add(location.toString());
+  });
 
 	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log('main: command received ' + request.command);

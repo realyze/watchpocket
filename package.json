@@ -1,0 +1,23 @@
+{
+  "name": "watchpocket",
+  "version": "0.9.0",
+  "description": "Kitt Pocket extension/",
+  "main": "index.js",
+  "scripts": {
+    "prepublish": "./node_modules/.bin/bower-installer --remove && rm -rf ./node_modules",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/realyze/watchpocket.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/realyze/watchpocket/issues"
+  },
+  "homepage": "https://github.com/realyze/watchpocket",
+  "devDependencies": {
+    "bower-installer": "~0.6.2"
+  }
+}

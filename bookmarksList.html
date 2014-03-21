@@ -7,13 +7,19 @@
     <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
     <link href="css/pocket.css" rel="stylesheet">
 		<!--link href="css/main.css" rel="stylesheet"-->
-		<script src="js/vendor/jquery.min.js"></script>
 		<script src="js/vendor/bootstrap.min.js"></script>
-		<script src="bower_components/angular/angular.min.js"></script>
+		<script src="vendor/jquery/jquery.js"></script>
+		<script src="vendor/angular/angular.js"></script>
+
+		<script src="vendor/spin.js/spin.js"></script>
+		<script src="vendor/angular-spinner/angular-spinner.js"></script>
+
+
 		<script src="js/bookmarkList.js"></script>
 	</head>
 	<body>
     <div id="bookmarks" ng-controller="bookmarksCtrl">
+      <span us-spinner="{radius:30, width:8, length: 16}" spinner-key="spinner-bookmarks"></span>
       <ul>
         <li ng-click="bookmarkSelected(item)" ng-repeat="item in bookmarks"><img src="{{item.icon}}"/>{{item.title}}</li>
       </ul>

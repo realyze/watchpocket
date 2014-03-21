@@ -4,14 +4,21 @@ var state = 'unread';
 var localJQuery = $.noConflict(true);
 (function($) {
 
-  angular.module('watchpocket', [])
+  console.log('jqueyr');
 
-  .controller('bookmarksCtrl', function($scope) {
+  angular.module('watchpocket', [
+    'angularSpinner'
+  ])
+
+  .controller('bookmarksCtrl', function($scope, usSpinnerService) {
     $scope.bookmarks = [];
+
+    usSpinnerService.spin('spinner-bookmarks');
 
     search(function(err, bookmarks) {
       console.log('bookmarks loaded');
       $scope.bookmarks = bookmarks;
+      usSpinnerService.stop('spinner-bookmarks');
       $scope.$apply();
     });
 
@@ -22,7 +29,7 @@ var localJQuery = $.noConflict(true);
 
   var search = function(callback) {
     console.log('calling search...');
-    chrome.runtime.sendMessage({
+    chrome.runtime.sendMessage(null, {
         command: "loadBookmarks",
         query: null, //$('.bookmarksSearch input').val(),
         sort: sort,

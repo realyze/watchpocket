@@ -7,8 +7,8 @@
   "icons": { "128": "img/appIcon.png" },
   "background": {
     "scripts": [
-      "bower_components/jquery/jquery.min.js",
-      "bower_components/q/q.js",
+      "vendor/jquery/jquery.js",
+      "vendor/q/q.js",
       "js/main.js"
     ]
   },

@@ -12,15 +12,13 @@
   "dependencies": {
     "jquery": "2.0.*",
     "q": "~1.0.0",
-    "angular": "~1.2.14"
+    "angular": "~1.2.14",
+    "angular-spinner": "~0.4.0",
+    "spin.js": "~2.0.0"
   },
   "devDependencies": [],
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ],
+  "install": {
+    "path": "vendor"
+  },
   "private": true
 }

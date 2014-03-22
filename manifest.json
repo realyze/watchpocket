@@ -3,7 +3,7 @@
 
   "name": "watchpocket",
   "description": "This extension allows you to connect to your Pocket account, bookmark and view a list of all your bookmarks.",
-  "version": "1.9",
+  "version": "1.10",
   "icons": { "128": "img/appIcon.png" },
   "background": {
     "scripts": [
@@ -27,12 +27,6 @@
   },
   "content_scripts": [
     {
-      "matches": ["chrome-extension.*"],
-      "js": [
-        "vendor/jquery/jquery.js",
-        "js/common.js",
-        "js/auth.js"
-      ]
     }
   ],
   "web_accessible_resources": [

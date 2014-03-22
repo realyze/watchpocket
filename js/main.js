@@ -144,12 +144,7 @@ watchpocket.add = function(url) {
     })
     .then(function() {
       LOG('adding to pocket...', params);
-      return watchpocket.post('https://getpocket.com/v3/add', params)
-    })
-    .then(function(reponse) {
-      console.log('aded to pocket ' + response);
-    //TODO: THIS IS NOT SUPPORTED IN KITT!
-    //chrome.tabs.executeScript(null, {code:"showBookmarkMessage();"});
+      return watchpocket.post('https://getpocket.com/v3/add', JSON.stringify(params));
     });
 };
 
@@ -179,32 +174,45 @@ $(function() {
   });
 
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log('main: command received ' + request.command);
-    if (request.command === 'addBookmark' && request.url) {
-      watchpocket.add(request.url);
-    } else if (request.command === 'loadBookmarks') {
-      console.log('main: loading bookmarks...')
-      watchpocket.loadBookmarks(request.query, request.sort, request.state)
-        .then(function(items) {
-          console.log('returning items ' + items);
-          sendResponse(items);
-        }, function(err) {
-          if (err.code === 401) {
+
+    LOG('main: command received ' + request.command);
+
+    switch (request.command) {
+
+      case 'addBookmark':
+        watchpocket.add(request.url).then(function() {
+          sendResponse();
+        }).done();
+        return true;
+
+      case 'loadBookmarks':
+        watchpocket.loadBookmarks(request.query, request.sort, request.state)
+          .then(function(items) {
+            console.log('returning items ' + items);
+            sendResponse(items);
+          }, function(err) {
+            if (err.code === 401) {
+              sendResponse(null);
+            }
+          })
+          .done();
+        return true;
+
+      case 'getOauthRequestToken':
+        sendResponse(null, oauthRequestToken);
+        break;
+
+      case 'getOauthAccessToken':
+        watchpocket.getAccessToken()
+          .then(function() {
             sendResponse(null);
-          }
-        });
-      return true;
-    } else if (request.command === 'getOauthRequestToken') {
-      console.log('getOauthRequestToken');
-      sendResponse(null, oauthRequestToken);
-    } else if (request.command === 'getOauthAccessToken') {
-      console.log('getOauthAccessToken');
-      watchpocket.getAccessToken(function() {
-        sendResponse(null);
-      });
-      return true;
-    } else {
-      console.log('unknown command: ' + JSON.stringify(request));
+          })
+         .done();
+        return true;
+
+      default:
+        console.warn('unknown command: ' + JSON.stringify(request));
+        break;
     }
   });
 });

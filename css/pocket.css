@@ -6,3 +6,12 @@
   width: 20px;
   height: 20px;
 }
+
+#bookmarks td {
+  vertical-align: middle;
+}
+
+
+#bookmarks td img {
+  max-width: 30px;
+}

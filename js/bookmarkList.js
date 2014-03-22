@@ -29,39 +29,52 @@ var localJQuery = $.noConflict(true);
       usSpinnerService.stop('spinner-bookmarks');
     });
 
-    search(function(bookmarks) {
-      if ( ! bookmarks) {
-        window.close();
-        return;
-      }
-      usSpinnerService.spin('spinner-bookmarks');
-      $scope.bookmarks = bookmarks;
-      $scope.$apply();
-    });
+    var loadBookmarks = function() {
+      LOG('loading bookmarks');
+      $scope.bookmarks = [];
 
-    $scope.bookmarkSelected = function(item) {
-      chrome.tabs.query({active: true}, function(tabs) {
-        if (tabs.length === 0) {
-          console.error('no active tab found');
-          return;
-        }
-        chrome.tabs.update(tabs[0].id, {url:item.url}, function(){
-          console.log('going to: ' + item.url)
-          window.close();
-        });
-      });
-    };
-  });
-
-  var search = function(callback) {
-    chrome.runtime.sendMessage(null, {
+      chrome.runtime.sendMessage(null, {
         command: "loadBookmarks",
         query: null,
         sort: sort,
         state: state
-      }, function(response) {
-        callback(response);
-    });
-  }
+      }, function(bookmarks) {
+        if ( ! bookmarks) {
+          window.close();
+          return;
+        }
+        usSpinnerService.spin('spinner-bookmarks');
+        $scope.bookmarks = bookmarks;
+        $scope.$apply();
+      });
+    };
+
+    $scope.bookmarkSelected = function(item) {
+      getActiveTab().then(function(tab) {
+        chrome.tabs.update(tab.id, {url:item.url}, function(){
+          console.log('going to: ' + item.url);
+          window.close();
+        });
+      });
+    };
+
+    $scope.addCurrent = function() {
+      usSpinnerService.spin('spinner-add');
+      getActiveTab().then(function(tab) {
+        LOG('adding bookmark', tab);
+        chrome.runtime.sendMessage(null, {
+          command: 'addBookmark',
+          url: tab.url
+        }, function() {
+          usSpinnerService.stop('spinner-add');
+          loadBookmarks();
+        });
+      });
+    };
+
+    // Init!
+
+    loadBookmarks();
+  });
 
 })(localJQuery);

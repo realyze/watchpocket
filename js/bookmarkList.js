@@ -30,14 +30,15 @@ var localJQuery = $.noConflict(true);
   })
 
   .controller('bookmarksCtrl', function($scope, usSpinnerService) {
+    var offset = 0;
+    var count = 20;
+
     $scope.bookmarks = [];
 
     $scope.$watch('bookmarks', function(newVal, oldVal) {
       usSpinnerService.stop('spinner-bookmarks');
     });
 
-    var offset = 0;
-    var count = 10;
 
     $scope.loadNextPage = function() {
       loadBookmarks({offset: offset, count: count});
@@ -97,10 +98,6 @@ var localJQuery = $.noConflict(true);
         });
       });
     };
-
-    // Init!
-
-    //loadBookmarks();
 
   });
 

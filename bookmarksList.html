@@ -21,8 +21,8 @@
 
 	<body>
 
-    <div class="container" ng-controller="bookmarksCtrl">
-      <div class="row">
+    <div class="container-fluid" ng-controller="bookmarksCtrl">
+      <div class="row-fluid">
         <div class="col-xs-8">
           <button type="button" class="btn btn-primary" ng-click="addCurrent()">Add current page</button>
         </div>
@@ -39,8 +39,8 @@
             spinner-start-active="1"></span>
           <table class="table">
             <tr ng-click="bookmarkSelected(item)" ng-repeat="item in bookmarks">
-              <td><img src="{{ item.icon }}"/></td>
-              <td>{{ item.title || item.url }}</td>
+              <td class="thumbnail"><img src="{{ item.icon }}"/></td>
+              <td class="title">{{ item.title || item.url }}</td>
             </tr>
           </table>
         </div>

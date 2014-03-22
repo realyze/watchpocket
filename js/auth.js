@@ -1,9 +1,12 @@
 $(function() {
   if (location.search == '?secret=MyLittlePinkPony') {
-    window.alert('auth done? ' + typeof(chrome.runtime.sendMessage));
     chrome.runtime.sendMessage({command: 'getOauthRequestToken'}, function(err, reqToken) {
       chrome.runtime.sendMessage({command: 'getOauthAccessToken'}, function(err, accessToken) {
-        window.alert('auth success');
+        if (err) {
+          console.warn('Could not authenticate with pocket: ' + JSON.stringify(err));
+          return;
+        }
+        console.log('Authentication to pocket successfull.');
       });
     });
 

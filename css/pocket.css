@@ -11,7 +11,15 @@
   vertical-align: middle;
 }
 
+#bookmarks td.title {
+  max-width: 500px;
+  text-overflow: ellipsis
+  white-space: nowrap; /* paragraph to one line */
+  overflow: hidden; /* older browsers */
+}
 
-#bookmarks td img {
-  max-width: 30px;
+
+#bookmarks td.thumbnail, #bookmarks td.thumbnail img {
+  width: 30px;
+  height: 30px;
 }

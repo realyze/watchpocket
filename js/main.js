@@ -23,7 +23,6 @@ watchpocket.post = function (url, data) {
   xhr.onreadystatechange = function () {
     console.log('ready state change, state:' + this.readyState + ' ' + xhr.status);
     if (xhr.readyState === 4 && xhr.status === 200) {
-      console.log('xhr response ' + xhr.responseText);
       defer.resolve(JSON.parse(xhr.responseText));
     } else if (this.readyState === 4 && this.status === 401) {
       console.log('HTTP 401 returned');
@@ -128,22 +127,15 @@ watchpocket.loadBookmarks = function(query, sort, state) {
 
 watchpocket.add = function(url) {
   var params = {
-    consumer_key: watchpocket.consumerKey
+    consumer_key: watchpocket.consumerKey,
+    url: url
   };
 
-  return getActiveTab().then(function(tab) {
-      params.url = tab.url;
-    })
-    .then(function() {
-      LOG('1');
-      return watchpocket.getOauthAccessToken()
-    })
+  return watchpocket.getOauthAccessToken()
     .then(function(oauthAccessToken) {
-      LOG('2');
       params.access_token = oauthAccessToken;
     })
     .then(function() {
-      LOG('adding to pocket...', params);
       return watchpocket.post('https://getpocket.com/v3/add', JSON.stringify(params));
     });
 };
@@ -165,12 +157,11 @@ $(function() {
     enabled: true
   });
 
-  chrome.contextMenus.onClicked.addListener(function(info, tab) {
+  chrome.contextMenus.onClicked.addListener(function(info) {
     if (info.menuItemId !== addToPocketMenuId) {
       return;
     }
-    console.log('tab url to add: ' + JSON.stringify(tab))
-    watchpocket.add(location.toString());
+    watchpocket.add(info.linkUrl);
   });
 
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -188,7 +179,6 @@ $(function() {
       case 'loadBookmarks':
         watchpocket.loadBookmarks(request.query, request.sort, request.state)
           .then(function(items) {
-            console.log('returning items ' + items);
             sendResponse(items);
           }, function(err) {
             if (err.code === 401) {
@@ -204,8 +194,8 @@ $(function() {
 
       case 'getOauthAccessToken':
         watchpocket.getAccessToken()
-          .then(function() {
-            sendResponse(null);
+          .then(function(token) {
+            sendResponse(null, token);
           })
          .done();
         return true;

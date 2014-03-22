@@ -57,8 +57,7 @@ watchpocket.getAccessToken = function() {
   .then(function(response) {
     oauthAccessToken = response.access_token;
     chrome.storage.sync.set({oauthAccessToken: oauthAccessToken}, function() {
-      console.log('oauth access token saved');
-      defer.resolve();
+      defer.resolve(oauthAccessToken);
     })
   });
 

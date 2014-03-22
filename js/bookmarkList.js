@@ -4,20 +4,6 @@ var state = 'unread';
 var localJQuery = $.noConflict(true);
 (function($) {
 
-  var getActiveTab = function() {
-    var defer = Q.defer();
-
-    chrome.tabs.query({active: true}, function(tabs) {
-      if (tabs.length === 0) {
-        console.error('no active tab found');
-        return defer.reject();
-      }
-      return defer.resolve(tabs[0]);
-    });
-
-    return defer.promise;
-  };
-
   angular.module('watchpocket', [
     'angularSpinner'
   ])
@@ -75,6 +61,7 @@ var localJQuery = $.noConflict(true);
     // Init!
 
     loadBookmarks();
+
   });
 
 })(localJQuery);

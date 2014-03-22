@@ -45,9 +45,10 @@ var localJQuery = $.noConflict(true);
     }
 
     $scope.$watch('searchText', function(newVal, oldVal) {
-      if (newVal && newVal !== oldVal) {
+      if (newVal !== oldVal) {
         console.log('searching for: ' + newVal);
         offset = 0;
+        $scope.bookmarks = []
         $scope.loadNextPage();
       }
     });

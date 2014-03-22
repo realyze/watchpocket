@@ -42,7 +42,7 @@ watchpocket.post = function (url, data) {
 };
 
 
-watchpocket.loadBookmarks = function(query, sort, state) {
+watchpocket.loadBookmarks = function(query, sort, state, search, offset, count) {
 
   var params = {};
 
@@ -61,6 +61,15 @@ watchpocket.loadBookmarks = function(query, sort, state) {
       if (state) {
         params['state'] = state;
       }
+      if (offset) {
+        params['offset'] = offset;
+      }
+      if (count) {
+        params['count'] = count;
+      }
+      if (search) {
+        params['search'] = search;
+      }
     })
 
     .then(function() {
@@ -70,8 +79,6 @@ watchpocket.loadBookmarks = function(query, sort, state) {
     })
 
     .then(function(response) {
-      console.log('calling success handler');
-      console.log('list loaded: ' + response);
 
       var list = response.list;
       var items = [];
@@ -86,7 +93,6 @@ watchpocket.loadBookmarks = function(query, sort, state) {
           var domain = realURL.match(/^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?/i)[3] || '';
           // Fetches a icon from a great webservice which provides a default fallback icon
           var icon = 'https://web-image.appspot.com/?url=' + realURL;
-                    //var icon = 'img/icon.png';
           // Show the shortened excerpt as a tooltip
           var excerpt = '';
           if (d.excerpt) {
@@ -119,6 +125,8 @@ watchpocket.loadBookmarks = function(query, sort, state) {
       else {
         items = items.sort(newestSort);
       }
+
+      //LOG('bookmarks: ', items);
 
       return items;
     });
@@ -177,7 +185,7 @@ $(function() {
         return true;
 
       case 'loadBookmarks':
-        watchpocket.loadBookmarks(request.query, request.sort, request.state)
+        watchpocket.loadBookmarks(request.query, request.sort, request.state, request.search, request.offset, request.count)
           .then(function(items) {
             sendResponse(items);
           }, function(err) {

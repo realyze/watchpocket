@@ -27,7 +27,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["/^chrome-extension.*$/"],
+      "matches": ["chrome-extension.*"],
       "js": [
         "vendor/jquery/jquery.js",
         "js/common.js",

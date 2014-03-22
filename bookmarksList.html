@@ -4,7 +4,8 @@
 		<meta charset="utf-8" />
 		<title>Watchpocket bookmarks</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
+    <link href="vendor/bootstrap/bootstrap.css" rel="stylesheet">
+    <link href="vendor/ladda-bootstrap/ladda-themeless.css" rel="stylesheet">
     <link href="css/pocket.css" rel="stylesheet">
 
 		<script src="vendor/jquery/jquery.js"></script>
@@ -13,7 +14,10 @@
 
 		<script src="vendor/spin.js/spin.js"></script>
 		<script src="vendor/angular-spinner/angular-spinner.js"></script>
-
+		<script src="vendor/angular-truncate/angular-truncate.js"></script>
+		<script src="vendor/ladda-bootstrap/ladda.js"></script>
+		<script src="vendor/ngInfiniteScroll/ng-infinite-scroll.js"></script>
+		<script src="vendor/underscore/underscore.js"></script>
 
     <script src="js/common.js"></script>
 		<script src="js/bookmarkList.js"></script>
@@ -23,11 +27,16 @@
 
     <div class="container-fluid" ng-controller="bookmarksCtrl">
       <div class="row-fluid">
-        <div class="col-xs-8">
-          <button type="button" class="btn btn-primary" ng-click="addCurrent()">Add current page</button>
+        <div class="col-xs-6">
+          <button class="btn btn-primary ladda-button"
+              data-style="zoom-in"
+              ng-click="addCurrent()"
+              ladda="bookmarkAddingInProgress">
+            <span class="ladda-label">Add current page</span>
+          </button>
         </div>
-        <div class="col-xs-4">
-          <span us-spinner spinner-key="spinner-add"/>
+        <div class="col-xs-6">
+          <input type="text" class="form-control" placeholder="Search" ng-model="searchText"/>
         </div>
       </div>
 
@@ -37,12 +46,18 @@
             us-spinner="{radius:30, width:8, length: 16}"
             spinner-key="spinner-bookmarks"
             spinner-start-active="1"></span>
-          <table class="table">
-            <tr ng-click="bookmarkSelected(item)" ng-repeat="item in bookmarks">
-              <td class="thumbnail"><img src="{{ item.icon }}"/></td>
-              <td class="title">{{ item.title || item.url }}</td>
-            </tr>
-          </table>
+          <div infinite-scroll="loadNextPage()" infinite-scroll-distance="3">
+            <table class="table">
+              <tr>
+                <th colspan="2">Reading list:</th>
+              </tr>
+              <tr ng-click="bookmarkSelected(item)" ng-repeat="item in bookmarks">
+                <td class="thumbnail"><img src="{{ item.icon }}"/></td>
+                <td class="title">{{ item.title || item.url | characters: 30 }}</td>
+                <td><span ng-show="item.favorite" class="glyphicon glyphicon-star">FAV</span></td>
+              </tr>
+            </table>
+          <div>
         </div>
       </div>
     </div>

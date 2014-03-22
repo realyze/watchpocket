@@ -5,8 +5,29 @@ var localJQuery = $.noConflict(true);
 (function($) {
 
   angular.module('watchpocket', [
-    'angularSpinner'
+    'angularSpinner',
+    'truncate',
+    'infinite-scroll'
   ])
+
+  .directive('ladda', function(){
+    return {
+      restrict: 'A',
+      link : function(scope, element, attrs){
+        var l = Ladda.create($(element).get(0));
+        scope.$watch(attrs.ladda, function(newVal, oldVal) {
+          console.log('ladda: ' + newVal);
+          if (newVal !== undefined) {
+            if(newVal) {
+              l.start();
+            } else {
+              l.stop();
+            }
+          }
+        });
+      }
+    };
+  })
 
   .controller('bookmarksCtrl', function($scope, usSpinnerService) {
     $scope.bookmarks = [];
@@ -15,22 +36,41 @@ var localJQuery = $.noConflict(true);
       usSpinnerService.stop('spinner-bookmarks');
     });
 
-    var loadBookmarks = function() {
-      LOG('loading bookmarks');
-      $scope.bookmarks = [];
+    var offset = 0;
+    var count = 10;
 
+    $scope.loadNextPage = function() {
+      loadBookmarks({offset: offset, count: count});
+    }
+
+    $scope.$watch('searchText', function(newVal, oldVal) {
+      if (newVal && newVal !== oldVal) {
+        console.log('searching for: ' + newVal);
+        offset = 0;
+        $scope.loadNextPage();
+      }
+    });
+
+    var loadBookmarks = function(opts) {
       chrome.runtime.sendMessage(null, {
         command: "loadBookmarks",
         query: null,
         sort: sort,
-        state: state
+        state: state,
+        search: $scope.searchText,
+        offset: opts.offset,
+        count: opts.count
       }, function(bookmarks) {
         if ( ! bookmarks) {
           window.close();
           return;
         }
         usSpinnerService.spin('spinner-bookmarks');
-        $scope.bookmarks = bookmarks;
+        if (offset === 0) {
+          $scope.bookmarks = []
+        }
+        $scope.bookmarks = _.union($scope.bookmarks, bookmarks);
+        offset += count;
         $scope.$apply();
       });
     };
@@ -45,14 +85,14 @@ var localJQuery = $.noConflict(true);
     };
 
     $scope.addCurrent = function() {
-      usSpinnerService.spin('spinner-add');
+      $scope.bookmarkAddingInProgress = true;
+
       getActiveTab().then(function(tab) {
-        LOG('adding bookmark', tab);
         chrome.runtime.sendMessage(null, {
           command: 'addBookmark',
           url: tab.url
         }, function() {
-          usSpinnerService.stop('spinner-add');
+          $scope.bookmarkAddingInProgress = false;
           loadBookmarks();
         });
       });
@@ -60,7 +100,7 @@ var localJQuery = $.noConflict(true);
 
     // Init!
 
-    loadBookmarks();
+    //loadBookmarks();
 
   });
 

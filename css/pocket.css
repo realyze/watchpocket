@@ -11,15 +11,31 @@
   vertical-align: middle;
 }
 
-#bookmarks td.title {
-  max-width: 500px;
-  text-overflow: ellipsis
-  white-space: nowrap; /* paragraph to one line */
-  overflow: hidden; /* older browsers */
+#bookmarks td.title.ng-click-active {
+  color: red;
 }
 
 
-#bookmarks td.thumbnail, #bookmarks td.thumbnail img {
+#bookmarks td.thumbnail {
   width: 30px;
   height: 30px;
 }
+
+
+.table tr:hover td,
+.table tr:hover th {
+  background-color: transparent;
+}
+
+
+.table-striped tr:nth-child(odd):hover td {
+   background-color: #F9F9F9;
+}
+
+@font-face {
+  font-family: 'Glyphicons Halflings';
+
+  src: url('vendor/bootstrap/glyphicons-halflings-regular.eot');
+  src: url('vendor/bootstrap/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('vendor/bootstrap/glyphicons-halflings-regular.woff') format('woff'), url('vendor/bootstrap/glyphicons-halflings-regular.ttf') format('truetype'), url('vendor/bootstrap/glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg');
+}
+

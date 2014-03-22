@@ -11,17 +11,25 @@
   ],
   "dependencies": {
     "jquery": "2.0.*",
+    "bootstrap": "3.1.1",
     "q": "~1.0.0",
     "angular": "~1.2.14",
     "angular-spinner": "~0.4.0",
-    "spin.js": "~2.0.0"
+    "spin.js": "~2.0.0",
+    "angular-truncate": "*",
+    "ladda-bootstrap": "~0.1.0",
+    "ngInfiniteScroll": "~1.0.0",
+    "underscore": "~1.6.0"
   },
   "devDependencies": [],
   "install": {
-    "path": "vendor"
+    "path": "vendor",
+    "sources": {
+      "angular-truncate": "bower_components/angular-truncate/dist/angular-truncate.js"
+    }
   },
   "private": true,
   "resolutions": {
-    "angular": "~1.2.14"
+    "spin.js": "~2.0.0"
   }
 }

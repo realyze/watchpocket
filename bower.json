@@ -11,25 +11,39 @@
   ],
   "dependencies": {
     "jquery": "2.0.*",
-    "bootstrap": "3.1.1",
     "q": "~1.0.0",
-    "angular": "~1.2.14",
-    "angular-spinner": "~0.4.0",
-    "spin.js": "~2.0.0",
-    "angular-truncate": "*",
-    "ladda-bootstrap": "~0.1.0",
-    "ngInfiniteScroll": "~1.0.0",
-    "underscore": "~1.6.0"
+    "underscore": "~1.6.0",
+    "ionic": "latest",
+    "angular-truncate": "*"
   },
   "devDependencies": [],
   "install": {
     "path": "vendor",
     "sources": {
-      "angular-truncate": "bower_components/angular-truncate/dist/angular-truncate.js"
+      "angular-truncate": "bower_components/angular-truncate/dist/angular-truncate.js",
+      "ionic": {
+        "mapping": [
+          {
+            "bower_components/ionic/release/js/ionic.bundle.min.js": "ionic.bundle.min.js"
+          },
+          {
+            "bower_components/ionic/release/css/ionic.min.css": "css/ionic.min.css"
+          },
+          {
+            "bower_components/ionic/release/fonts/ionicons.eot": "fonts/ionicons.eot"
+          },
+          {
+            "bower_components/ionic/release/fonts/ionicons.svg": "fonts/ionicons.svg"
+          },
+          {
+            "bower_components/ionic/release/fonts/ionicons.ttf": "fonts/ionicons.ttf"
+          },
+          {
+            "bower_components/ionic/release/fonts/ionicons.woff": "fonts/ionicons.woff"
+          }
+        ]
+      }
     }
   },
-  "private": true,
-  "resolutions": {
-    "spin.js": "~2.0.0"
-  }
+  "private": true
 }

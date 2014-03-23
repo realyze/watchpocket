@@ -1,65 +1,51 @@
 <!DOCTYPE html>
 <html ng-app="watchpocket">
 	<head>
-		<meta charset="utf-8" />
-		<title>Watchpocket bookmarks</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="vendor/bootstrap/bootstrap.css" rel="stylesheet">
-    <link href="vendor/ladda-bootstrap/ladda-themeless.css" rel="stylesheet">
-    <link href="css/pocket.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
+    <title>Pocker Extension</title>
+
+    <link href="vendor/ionic/css/ionic.min.css" rel="stylesheet"></link>
+    <link href="css/pocket.css" rel="stylesheet"></link>
 
 		<script src="vendor/jquery/jquery.js"></script>
-		<script src="vendor/angular/angular.js"></script>
 		<script src="vendor/q/q.js"></script>
-
-		<script src="vendor/spin.js/spin.js"></script>
-		<script src="vendor/angular-spinner/angular-spinner.js"></script>
-		<script src="vendor/angular-truncate/angular-truncate.js"></script>
-		<script src="vendor/ladda-bootstrap/ladda.js"></script>
-		<script src="vendor/ngInfiniteScroll/ng-infinite-scroll.js"></script>
 		<script src="vendor/underscore/underscore.js"></script>
+    <script src="vendor/ionic/ionic.bundle.min.js"></script>
+    <script src="vendor/angular-truncate/angular-truncate.js"></script>
 
     <script src="js/common.js"></script>
 		<script src="js/bookmarkList.js"></script>
   </head>
 
-	<body>
+  <body ng-controller="bookmarksCtrl">
 
-    <div class="container-fluid" ng-controller="bookmarksCtrl">
-      <div class="row-fluid">
-        <div class="col-xs-6">
-          <button class="btn btn-primary ladda-button"
-              data-style="zoom-in"
-              ng-click="addCurrent()"
-              ladda="bookmarkAddingInProgress">
-            <span class="ladda-label">Add current page</span>
-          </button>
-        </div>
-        <div class="col-xs-6">
-          <input type="text" class="form-control" placeholder="Search" ng-model="searchText"/>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-xs-12" id="bookmarks">
-          <span class="main-spinner"
-            us-spinner="{radius:30, width:8, length: 16}"
-            spinner-key="spinner-bookmarks"
-            spinner-start-active="1"></span>
-          <div infinite-scroll="loadNextPage()" infinite-scroll-distance="3">
-            <table class="table">
-              <tr>
-                <th colspan="2">Reading list:</th>
-              </tr>
-              <tr ng-click="bookmarkSelected(item)" ng-repeat="item in bookmarks">
-                <td class="thumbnail"><img src="{{ item.icon }}"/></td>
-                <td class="title">{{ item.title || item.url | characters: 30 }}</td>
-                <td><span ng-show="item.favorite" class="glyphicon glyphicon-star">FAV</span></td>
-              </tr>
-            </table>
-          <div>
-        </div>
-      </div>
+    <div class="bar bar-header bar-positive">
+      <button class="button icon ion-navicon"></button>
+      <h1 class="title">Your Pocket</h1>
+      <button class="button ion-plus" ng-click="addCurrent()"></button>
     </div>
+
+
+    <ion-content class="has-header">
+
+      <div class="list">
+
+        <a ng-repeat="item in bookmarks" href="#" class="item item-thumbnail-left" ng-click="bookmarkSelected(item)">
+          <img ng-src="{{ item.icon }}"/>
+          <h2>{{ item.title || item.url | characters: 30}}</h2>
+          <p>{{ item.domain }}</p>
+        </a>
+
+      </div>
+
+      <ion-infinite-scroll
+        on-infinite="loadNextPage()"
+        ng-if="!allResultsFetched"
+        distance="1%">
+      </ion-infinite-scroll>
+
+    </ion-content>
+
   </body>
 </html>

@@ -5,9 +5,8 @@ var localJQuery = $.noConflict(true);
 (function($) {
 
   angular.module('watchpocket', [
-    'angularSpinner',
+    'ionic',
     'truncate',
-    'infinite-scroll'
   ])
 
   .directive('ladda', function(){
@@ -29,16 +28,22 @@ var localJQuery = $.noConflict(true);
     };
   })
 
-  .controller('bookmarksCtrl', function($scope, usSpinnerService) {
+  .controller('bookmarksCtrl', function($scope, $ionicLoading) {
     var offset = 0;
     var count = 20;
 
+    console.log('controller');
+
     $scope.bookmarks = [];
+    $scope.allResultsFetched = false;
 
     $scope.$watch('bookmarks', function(newVal, oldVal) {
-      usSpinnerService.stop('spinner-bookmarks');
-    });
-
+      if (newVal !== oldVal && newVal === []) {
+        $scope.allResultsFetched = false;
+        offset = 0;
+        $scope.loadNextPage();
+      }
+    }, true);
 
     $scope.loadNextPage = function() {
       loadBookmarks({offset: offset, count: count});
@@ -46,7 +51,6 @@ var localJQuery = $.noConflict(true);
 
     $scope.$watch('searchText', function(newVal, oldVal) {
       if (newVal !== oldVal) {
-        console.log('searching for: ' + newVal);
         offset = 0;
         $scope.bookmarks = []
         $scope.loadNextPage();
@@ -54,6 +58,7 @@ var localJQuery = $.noConflict(true);
     });
 
     var loadBookmarks = function(opts) {
+      console.log('reuest bookmarks');
       chrome.runtime.sendMessage(null, {
         command: "loadBookmarks",
         query: null,
@@ -67,13 +72,16 @@ var localJQuery = $.noConflict(true);
           window.close();
           return;
         }
-        usSpinnerService.spin('spinner-bookmarks');
         if (offset === 0) {
           $scope.bookmarks = []
         }
         $scope.bookmarks = _.union($scope.bookmarks, bookmarks);
         offset += count;
+        if (bookmarks.length === 0) {
+          $scope.allResultsFetched = true;
+        }
         $scope.$apply();
+        $scope.$broadcast('scroll.infiniteScrollComplete');
       });
     };
 
@@ -87,18 +95,18 @@ var localJQuery = $.noConflict(true);
     };
 
     $scope.addCurrent = function() {
-      $scope.bookmarkAddingInProgress = true;
-
       getActiveTab().then(function(tab) {
         chrome.runtime.sendMessage(null, {
           command: 'addBookmark',
           url: tab.url
         }, function() {
-          $scope.bookmarkAddingInProgress = false;
-          loadBookmarks();
+          window.close();
+          $scope.$apply();
         });
       });
     };
+
+    //$scope.loadNextPage();
 
   });
 

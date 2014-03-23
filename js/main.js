@@ -61,13 +61,13 @@ watchpocket.loadBookmarks = function(query, sort, state, search, offset, count) 
       if (state) {
         params['state'] = state;
       }
-      if (offset) {
+      if (typeof(offset) !== 'undefined') {
         params['offset'] = offset;
       }
-      if (count) {
+      if (typeof(count) !== 'undefined') {
         params['count'] = count;
       }
-      if (search) {
+      if (typeof(search) !== 'undefined') {
         params['search'] = search;
       }
     })

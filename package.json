@@ -1,10 +1,9 @@
 {
-  "name": "watchpocket",
+  "name": "pocket",
   "version": "0.9.0",
-  "description": "Kitt Pocket extension/",
-  "main": "index.js",
+  "description": "Kitt Pocket extension.",
+  "private": "true",
   "scripts": {
-    "prepublish": "./node_modules/.bin/bower-installer --remove && rm -rf ./node_modules",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

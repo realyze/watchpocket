@@ -21,14 +21,6 @@ $(function() {
           console.log('Authentication to pocket successfull.');
         });
       });
-
-      $('#closeTab').click(function(e) {
-        e.preventDefault();
-        chrome.tabs.getCurrent(function(tab) {
-          chrome.tabs.remove(tab.id);
-        });
-        return false;
-      });
     }
   });
 });

@@ -4,7 +4,7 @@ var state = 'unread';
 var localJQuery = $.noConflict(true);
 (function($) {
 
-  angular.module('watchpocket', [
+  angular.module('pocket', [
     'ionic',
     'truncate',
   ])
@@ -105,8 +105,6 @@ var localJQuery = $.noConflict(true);
         });
       });
     };
-
-    //$scope.loadNextPage();
 
   });
 

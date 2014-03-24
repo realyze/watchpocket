@@ -106,7 +106,12 @@ watchpocket.loadBookmarks = function(query, sort, state, search, offset, count) 
             excerpt: excerpt,
             icon: icon,
             domain: domain,
-            added: d.time_added,
+            time: {
+              added: moment.unix(d.time_added),
+              updated: moment.unix(d.time_updated),
+              read: moment.unix(d.time_read),
+              favorited: moment.unix(d.time_favorited)
+            },
             favorite: (parseInt(d.favorite) === 1),
             status: parseInt(d.status)
           });
@@ -126,7 +131,7 @@ watchpocket.loadBookmarks = function(query, sort, state, search, offset, count) 
         items = items.sort(newestSort);
       }
 
-      //LOG('bookmarks: ', items);
+      LOG('bookmarks: ', items);
 
       return items;
     });

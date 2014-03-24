@@ -7,6 +7,7 @@ var localJQuery = $.noConflict(true);
   angular.module('pocket', [
     'ionic',
     'truncate',
+    'angularMoment'
   ])
 
   .directive('ladda', function(){

@@ -41,3 +41,8 @@
 .list img {
   max-width: 30px;
 }
+
+.list .time-updated {
+  position: relative;
+  float: right;
+}

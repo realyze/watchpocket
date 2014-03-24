@@ -11,6 +11,7 @@
       "vendor/q/q.js",
       "js/common.js",
       "js/oauth.js",
+      "vendor/momentjs/moment.js",
       "js/main.js"
     ]
   },

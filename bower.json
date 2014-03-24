@@ -14,7 +14,9 @@
     "q": "~1.0.0",
     "underscore": "~1.6.0",
     "ionic": "latest",
-    "angular-truncate": "*"
+    "angular-truncate": "*",
+    "momentjs": "~2.5.1",
+    "angular-moment": "~0.6.2"
   },
   "devDependencies": [],
   "install": {

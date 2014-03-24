@@ -13,6 +13,8 @@
 		<script src="vendor/underscore/underscore.js"></script>
     <script src="vendor/ionic/ionic.bundle.min.js"></script>
     <script src="vendor/angular-truncate/angular-truncate.js"></script>
+    <script src="vendor/momentjs/moment.js"></script>
+    <script src="vendor/angular-moment/angular-moment.js"></script>
 
     <script src="js/common.js"></script>
 		<script src="js/bookmarkList.js"></script>
@@ -37,7 +39,7 @@
           <img ng-src="{{ item.icon }}"/>
           <h2>{{ item.title || item.url | characters: 30}}</h2>
           <p>{{ item.domain }}</p>
-          <p ng-show="item.favorite"><i class="icon ion-star"></i></p>
+          <p><i ng-class="{'icon':true, 'ion-ios7-star':item.favorite, 'ion-ios7-star-outline':!item.favorite}"></i><span class="time-updated" am-time-ago="item.time.updated"></span></p>
         </a>
 
       </div>

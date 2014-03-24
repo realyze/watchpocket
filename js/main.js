@@ -4,7 +4,7 @@ var oauthRequestToken = null;
 var oauthAccessToken = null;
 
 
-watchpocket.consumerKey = '24728-3ffcc9d8cd78b7890e28362e';
+watchpocket.consumerKey = '24728-138a886505ed5955209803d6';
 
 
 watchpocket.post = function (url, data) {
@@ -67,7 +67,7 @@ watchpocket.loadBookmarks = function(query, sort, state, search, offset, count) 
       if (typeof(count) !== 'undefined') {
         params['count'] = count;
       }
-      if (typeof(search) !== 'undefined') {
+      if (search) {
         params['search'] = search;
       }
     })

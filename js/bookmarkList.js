@@ -32,6 +32,8 @@ var localJQuery = $.noConflict(true);
     var offset = 0;
     var count = 20;
 
+    var searchDelayMs = 700;
+
     console.log('controller');
 
     $scope.bookmarks = [];
@@ -49,11 +51,15 @@ var localJQuery = $.noConflict(true);
       loadBookmarks({offset: offset, count: count});
     }
 
+    var onSearch = _.debounce(function() {
+      offset = 0;
+      $scope.bookmarks = []
+      $scope.loadNextPage();
+    }, searchDelayMs);
+
     $scope.$watch('searchText', function(newVal, oldVal) {
       if (newVal !== oldVal) {
-        offset = 0;
-        $scope.bookmarks = []
-        $scope.loadNextPage();
+        onSearch();
       }
     });
 

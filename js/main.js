@@ -1,5 +1,8 @@
 var watchpocket = watchpocket || {};
 
+var log = Minilog('app');
+Minilog.enable();
+
 var oauthRequestToken = null;
 var oauthAccessToken = null;
 
@@ -12,20 +15,20 @@ watchpocket.post = function (url, data) {
 
   var xhr = new XMLHttpRequest();
   xhr.onerror = function(err) {
-    console.log('XMLHttpRequest error: ' + err);
+    log.debug('XMLHttpRequest error: ' + err);
     if (this.status === 401) {
-      console.log('HTTP 401 returned');
+      log.debug('HTTP 401 returned');
       watchpocket.getRequestToken();
       defer.reject({code: 401});
     }
   };
 
   xhr.onreadystatechange = function () {
-    console.log('ready state change, state:' + this.readyState + ' ' + xhr.status);
+    log.debug('ready state change, state:' + this.readyState + ' ' + xhr.status);
     if (xhr.readyState === 4 && xhr.status === 200) {
       defer.resolve(JSON.parse(xhr.responseText));
     } else if (this.readyState === 4 && this.status === 401) {
-      console.log('HTTP 401 returned');
+      log.debug('HTTP 401 returned');
       watchpocket.getRequestToken();
       defer.reject({code: 401});
     }
@@ -36,106 +39,141 @@ watchpocket.post = function (url, data) {
   xhr.setRequestHeader("X-Accept", "application/json");
   xhr.send(data || null);
 
-  LOG('HTTP req sent to', url, data);
+  log.debug('HTTP req sent to', url, data);
 
   return defer.promise;
 };
 
 
-watchpocket.loadBookmarks = function(query, sort, state, search, offset, count) {
+function processItem(item) {
+  // Real URL is preferably the resolved URL but could be the given URL
+  var realURL = item.resolved_url || item.given_url;
 
-  var params = {};
+  // If neither resolved or given URL the item isn't worthwhile showing
+  if ( ! realURL || item.status > 0) {
+    return null;
+  }
 
-  return watchpocket.getOauthAccessToken()
-    .then(function(token) {
-      params = {
-        consumer_key: watchpocket.consumerKey,
-        access_token: token
-      }
-      if (query) {
-        params['search'] = query;
-      }
-      if (sort) {
-        params['sort'] = sort;
-      }
-      if (state) {
-        params['state'] = state;
-      }
-      if (typeof(offset) !== 'undefined') {
-        params['offset'] = offset;
-      }
-      if (typeof(count) !== 'undefined') {
-        params['count'] = count;
-      }
-      if (search) {
-        params['search'] = search;
-      }
-    })
+  var id = item.item_id;
+  // Regular expression to parse out the domain name of the URL, or an empty string if something fails
+  var domain = realURL.match(/^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?/i)[3] || '';
+  // Fetches a icon from a great webservice which provides a default fallback icon
+  var icon = 'https://web-image.appspot.com/?url=' + realURL;
 
-    .then(function() {
-      return watchpocket.post(
-        'https://getpocket.com/v3/get', JSON.stringify(params)
-      );
-    })
+  // Create a data object and push it to the items array
+  return {
+    id: id,
+    url: realURL,
+    title: item.resolved_title || item.given_title,
+    excerpt: item.excerpt,
+    icon: icon,
+    domain: domain,
+    time: {
+      added: moment.unix(item.time_added),
+      updated: moment.unix(item.time_updated),
+      read: moment.unix(item.time_read),
+      favorited: moment.unix(item.time_favorited)
+    },
+    favorite: (parseInt(item.favorite) === 1),
+    //status: parseInt(item.status)
+  };
+}
 
-    .then(function(response) {
 
-      var list = response.list;
-      var items = [];
+watchpocket.loadBookmarks = function(opts, flags) {
+  // Preprocess arguments.
+  _.each(opts, function(val, key) {
+    if (_.isUndefined(val) || _.isNull(val)) {
+      delete opts[key];
+    }
+  });
 
-      $.each(list, function(i, d) {
-        // Real URL is preferably the resolved URL but could be the given URL
-        var realURL = d.resolved_url || d.given_url;
-        // If neither resolved or given URL the item isn't worthwhile showing
-        if (realURL) {
-          var id = d.item_id;
-          // Regular expression to parse out the domain name of the URL, or an empty string if something fails
-          var domain = realURL.match(/^((http[s]?|ftp):\/)?\/?([^:\/\s]+)(:([^\/]*))?/i)[3] || '';
-          // Fetches a icon from a great webservice which provides a default fallback icon
-          var icon = 'https://web-image.appspot.com/?url=' + realURL;
-          // Show the shortened excerpt as a tooltip
-          var excerpt = '';
-          if (d.excerpt) {
-            excerpt = 'data-original-title="' + d.excerpt.substr(0, 120) + '..."';
-          }
-          // Create a data object and push it to the items array
-          items.push({
-            id: id,
-            url: realURL,
-            title: d.resolved_title || d.given_title,
-            excerpt: excerpt,
-            icon: icon,
-            domain: domain,
-            time: {
-              added: moment.unix(d.time_added),
-              updated: moment.unix(d.time_updated),
-              read: moment.unix(d.time_read),
-              favorited: moment.unix(d.time_favorited)
-            },
-            favorite: (parseInt(d.favorite) === 1),
-            status: parseInt(d.status)
+  log.debug('opts', opts, flags);
+
+  return getFromStorage('items').then(function(_itemsCache) {
+    var itemsCache = _itemsCache || {};
+    var bookmarks = _.values(itemsCache);
+    log.debug('cached bookmarks', bookmarks.length);
+
+    if ( ! flags.updateCache && ! opts.search && bookmarks.length > 0 && bookmarks.length > opts.offset) {
+      log.debug('loading bookmarks from cache', opts, bookmarks.length);
+      var bookmarksByUpdateTime = _.sortBy(bookmarks, function(b) {return b.time.updated}).reverse();
+      log.debug('bookmarksByUpdateTime', bookmarksByUpdateTime.length, _.pluck(_.pluck(bookmarksByUpdateTime, 'time'), 'updated'));
+      var result = bookmarksByUpdateTime.slice(opts.offset, opts.offset + opts.count);
+      log.debug('result', result.length, _.pluck(_.pluck(result, 'time'), 'updated'));
+      return {items: result};
+    }
+
+    log.debug('loading bookmarks from Pocket server.');
+
+    // Either we were requested to update the cache or the offset is set and we
+    // haven't cached items at that offset yet.
+    return watchpocket.getOauthAccessToken()
+
+      .then(function(token) {
+        var params = _.extend({
+          consumer_key: watchpocket.consumerKey,
+          access_token: token
+        }, opts);
+        if ( ! opts.offset && bookmarks.length > 0 && ! opts.search) {
+          // Only use 'since' timestamp if we're refreshing or when it's the
+          // first page load (we wouldn't load the whole list otherwise). Don't
+          // use it when we search.
+          return getFromStorage('lastUpdateTimestamp').then(function(timestamp) {
+            if (timestamp) {
+              params.since = timestamp;
+            }
+            return params;
           });
+        } else {
+          return params;
         }
+      })
+      
+      .then(function(params) {
+        log.debug('params', params);
+        return watchpocket.post('https://getpocket.com/v3/get', JSON.stringify(params));
+      })
+
+      .then(function(response) {
+        var list = response.list;
+        var items = _.compact(_.map(list, processItem));
+        var removedIds = _.chain(list)
+          .values()
+          .filter(function(item) {
+            return (item.status > 0)
+          })
+          .pluck('item_id')
+          .value()
+
+        //log.debug('response', response, removedIds);
+
+        _.each(removedIds, function(id) {
+          delete itemsCache[id];
+        });
+        _.each(items, function(item) {
+          itemsCache[item.id] = item;
+        });
+
+        //log.debug('cache', itemsCache);
+
+        // Return a promise to store items in cache.
+        return saveToStorage('items', itemsCache)
+          .then(function() {
+            // Save the timestamp so that we know where to start next time we
+            // request items.
+            return saveToStorage('lastUpdateTimestamp', response.since)
+          })
+          .then(function() {
+            log.debug('items', _.pluck(items, 'time.updated'));
+            return {
+              items: items,
+              removed: removedIds
+            }
+          });
+        })
       });
-
-      if (params.sort === 'oldest') {
-        items = items.sort(oldestSort);
-      }
-      else if (params.sort === 'title') {
-        items = items.sort(titleSort);
-      }
-      else if (params.sort === 'site') {
-        items = items.sort(siteSort);
-      }
-      else {
-        items = items.sort(newestSort);
-      }
-
-      LOG('bookmarks: ', items);
-
-      return items;
-    });
-};
+  };
 
 
 watchpocket.add = function(url) {
@@ -150,6 +188,9 @@ watchpocket.add = function(url) {
     })
     .then(function() {
       return watchpocket.post('https://getpocket.com/v3/add', JSON.stringify(params));
+    })
+    .then(function() {
+      return watchpocket.loadBookmarks({}, {updateCache: true});
     });
 };
 
@@ -179,7 +220,7 @@ $(function() {
 
   chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
-    LOG('main: command received ' + request.command);
+    log.debug('main: command received ' + request.command);
 
     switch (request.command) {
 
@@ -190,7 +231,7 @@ $(function() {
         return true;
 
       case 'loadBookmarks':
-        watchpocket.loadBookmarks(request.query, request.sort, request.state, request.search, request.offset, request.count)
+        watchpocket.loadBookmarks(request.opts, request.flags)
           .then(function(items) {
             sendResponse(items);
           }, function(err) {
@@ -211,6 +252,12 @@ $(function() {
             sendResponse(null, token);
           })
          .done();
+        return true;
+
+      case 'wipeBookmarkCache': 
+        saveToStorage('items', null).then(function() {
+          saveToStorage('lastUpdateTimestamp', null);
+        })
         return true;
 
       default:

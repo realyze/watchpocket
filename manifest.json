@@ -9,9 +9,11 @@
     "scripts": [
       "vendor/jquery/jquery.js",
       "vendor/q/q.js",
+      "vendor/underscore/underscore.js",
+      "vendor/momentjs/moment.js",
+      "vendor/minilog/minilog.js",
       "js/common.js",
       "js/oauth.js",
-      "vendor/momentjs/moment.js",
       "js/main.js"
     ]
   },

@@ -48,6 +48,28 @@ var getActiveTab = function() {
   return defer.promise;
 };
 
+
+var getFromStorage = function(key) {
+  var defer = Q.defer();
+  chrome.storage.sync.get(key, function(items) {
+    defer.resolve(items[key]);
+  });
+  return defer.promise;
+}
+
+
+var saveToStorage = function(key, val) {
+  var defer = Q.defer();
+  var obj = {}
+  obj[key] = val;
+  chrome.storage.sync.set(obj, function() {
+    console.log('saved to storage');
+    defer.resolve();
+  });
+  return defer.promise;
+}
+
+
 var LOG = function() {
   res = "";
   for(i=0; i<arguments.length; ++i) {

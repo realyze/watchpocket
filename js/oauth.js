@@ -15,12 +15,7 @@ watchpocket.getRequestToken = function() {
 
 
 watchpocket.getOauthAccessToken = function() {
-  var defer = Q.defer();
-  chrome.storage.sync.get('oauthAccessToken', function(items) {
-    console.log('oauth access token: ' + items.oauthAccessToken);
-    defer.resolve(items.oauthAccessToken);
-  });
-  return defer.promise;
+  return getFromStorage('oauthAccessToken');
 };
 
 watchpocket.getAuthorization = function(requestToken) {
@@ -44,9 +39,7 @@ watchpocket.getAuthorization = function(requestToken) {
 };
 
 watchpocket.getAccessToken = function() {
-  var defer = Q.defer();
-
-  watchpocket.post(
+  return watchpocket.post(
     'https://getpocket.com/v3/oauth/authorize',
     JSON.stringify({
       'consumer_key' : watchpocket.consumerKey,
@@ -55,11 +48,10 @@ watchpocket.getAccessToken = function() {
   )
 
   .then(function(response) {
-    oauthAccessToken = response.access_token;
-    chrome.storage.sync.set({oauthAccessToken: oauthAccessToken}, function() {
-      defer.resolve(oauthAccessToken);
-    })
+    var oauthAccessToken = response.access_token;
+    return saveToStorage('oauthAccessToken', oauthAccessToken)
+      .then(function() {
+        return oauthAccessToken;
+      });
   });
-
-  return defer.promise;
 };

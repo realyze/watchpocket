@@ -7,35 +7,15 @@ var localJQuery = $.noConflict(true);
   angular.module('pocket', [
     'ionic',
     'truncate',
-    'angularMoment'
+    'angularMoment',
+    'ngAnimate',
+    'ngAnimate-animate.css'
   ])
 
-  .directive('ladda', function(){
-    return {
-      restrict: 'A',
-      link : function(scope, element, attrs){
-        var l = Ladda.create($(element).get(0));
-        scope.$watch(attrs.ladda, function(newVal, oldVal) {
-          console.log('ladda: ' + newVal);
-          if (newVal !== undefined) {
-            if(newVal) {
-              l.start();
-            } else {
-              l.stop();
-            }
-          }
-        });
-      }
-    };
-  })
-
   .controller('bookmarksCtrl', function($scope, $ionicLoading) {
-    var offset = 0;
     var count = 20;
 
     var searchDelayMs = 700;
-
-    console.log('controller');
 
     $scope.bookmarks = [];
     $scope.allResultsFetched = false;
@@ -43,17 +23,17 @@ var localJQuery = $.noConflict(true);
     $scope.$watch('bookmarks', function(newVal, oldVal) {
       if (newVal !== oldVal && newVal === []) {
         $scope.allResultsFetched = false;
-        offset = 0;
         $scope.loadNextPage();
       }
     }, true);
 
     $scope.loadNextPage = function() {
-      loadBookmarks({offset: offset, count: count});
+      loadBookmarks({}, {}, function() {
+        $scope.$broadcast('scroll.infiniteScrollComplete');
+      });
     }
 
     var onSearch = _.debounce(function() {
-      offset = 0;
       $scope.bookmarks = []
       $scope.loadNextPage();
     }, searchDelayMs);
@@ -64,31 +44,69 @@ var localJQuery = $.noConflict(true);
       }
     });
 
-    var loadBookmarks = function(opts) {
-      console.log('reuest bookmarks');
+    $scope.onRefresh = function() {
+      LOG('update on refresh!');
+      loadBookmarks({
+        offset: null,
+        count: null,
+        sort: null,
+        state: null
+      }, {
+        updateCache: true
+      }, function() {
+          $scope.$broadcast('scroll.refreshComplete');
+      });
+    }
+
+    var loadBookmarks = function(opts, flags, callback) {
+      console.log('requesting bookmarks');
       chrome.runtime.sendMessage(null, {
         command: "loadBookmarks",
-        query: null,
-        sort: sort,
-        state: state,
-        search: $scope.searchText,
-        offset: opts.offset,
-        count: opts.count
-      }, function(bookmarks) {
-        if ( ! bookmarks) {
+        flags: {
+          updateCache: flags.updateCache || false
+        },
+        opts: _.defaults(opts, {
+          sort: sort,
+          state: state,
+          search: $scope.searchText,
+          offset: $scope.bookmarks.length,
+          count: count,
+        })
+      }, function(response) {
+        if ( ! response) {
           window.close();
           return;
         }
-        if (offset === 0) {
-          $scope.bookmarks = []
+        var bookmarks = response.items || [];
+        var removedIds = response.removed || [];
+
+        // Merge in new and updated bookmarks.
+        for (var i=0; i<bookmarks.length; ++i) {
+          var item = _.findWhere($scope.bookmarks, {id: bookmarks[i].id});
+          if (item) {
+            $scope.bookmarks[$scope.bookmarks.indexOf(item)] = bookmarks[i];
+          } else {
+            $scope.bookmarks.push(bookmarks[i]);
+          }
         }
-        $scope.bookmarks = _.union($scope.bookmarks, bookmarks);
-        offset += count;
-        if (bookmarks.length === 0) {
-          $scope.allResultsFetched = true;
-        }
+
+        // Remove the removed bookmarks.
+        var removed = _.filter($scope.bookmarks, function(item) {
+          return ~removedIds.indexOf(item.id);
+        });
+
+        $scope.bookmarks = _.chain($scope.bookmarks)
+          .difference(removed)
+          .sortBy(function(b) {
+            return b.time.updated;
+          })
+          .reverse()
+          .value();
+
+        $scope.allResultsFetched = (bookmarks.length === 0);
         $scope.$apply();
-        $scope.$broadcast('scroll.infiniteScrollComplete');
+
+        callback();
       });
     };
 
@@ -112,6 +130,12 @@ var localJQuery = $.noConflict(true);
         });
       });
     };
+
+    $scope.wipeCache = function() {
+      chrome.runtime.sendMessage(null, {
+        command: "wipeBookmarkCache"
+      });
+    }
 
   });
 

@@ -27,7 +27,7 @@
     "sources": {
       "angular-truncate": "bower_components/angular-truncate/dist/angular-truncate.js",
       "animate.css": "bower_components/animate.css/animate.min.css",
-      "momentjs": "bower_components/momentjs/min/moment.min.js",
+      "momentjs": ["bower_components/momentjs/min/moment.min.js",
       "ionic": {
         "mapping": [
           {
